@@ -216,7 +216,6 @@ func (c *Client) get(ctx context.Context, url string, body any, parseFn func([]b
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(buf))
 	if parseFn != nil {
 		err = parseFn(buf)
 	} else {
