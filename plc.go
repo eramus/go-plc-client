@@ -229,7 +229,7 @@ func (c *Client) get(ctx context.Context, url string, body any, parseFn func([]b
 }
 
 func (c *Client) GetDocument(ctx context.Context, didstr string) (*did.Document, error) {
-	ctx, span := otel.Tracer("gosky").Start(ctx, "plcGetDocument")
+	ctx, span := otel.Tracer("plc-client").Start(ctx, "plcGetDocument")
 	defer span.End()
 
 	var doc = did.Document{}
@@ -237,7 +237,7 @@ func (c *Client) GetDocument(ctx context.Context, didstr string) (*did.Document,
 }
 
 func (c *Client) GetDocumentData(ctx context.Context, didstr string) (*DocumentData, error) {
-	ctx, span := otel.Tracer("gosky").Start(ctx, "plcGetDocumentData")
+	ctx, span := otel.Tracer("plc-client").Start(ctx, "plcGetDocumentData")
 	defer span.End()
 
 	var dd = DocumentData{}
@@ -245,7 +245,7 @@ func (c *Client) GetDocumentData(ctx context.Context, didstr string) (*DocumentD
 }
 
 func (c *Client) GetOperationLog(ctx context.Context, didstr string) (Operations, error) {
-	ctx, span := otel.Tracer("gosky").Start(ctx, "plcOperationLog")
+	ctx, span := otel.Tracer("plc-client").Start(ctx, "plcGetOperationLog")
 	defer span.End()
 
 	var ops Operations
@@ -268,7 +268,7 @@ func (c *Client) GetOperationLog(ctx context.Context, didstr string) (Operations
 }
 
 func (c *Client) GetLastOperation(ctx context.Context, didstr string) (Operation, error) {
-	ctx, span := otel.Tracer("gosky").Start(ctx, "plcGetLastOperation")
+	ctx, span := otel.Tracer("plc-client").Start(ctx, "plcGetLastOperation")
 	defer span.End()
 
 	var o Operation
@@ -284,7 +284,7 @@ func (c *Client) GetLastOperation(ctx context.Context, didstr string) (Operation
 }
 
 func (c *Client) GetAuditLog(ctx context.Context, didstr string) ([]*AuditLog, error) {
-	ctx, span := otel.Tracer("gosky").Start(ctx, "plcGetAuditLog")
+	ctx, span := otel.Tracer("plc-client").Start(ctx, "plcGetAuditLog")
 	defer span.End()
 
 	var audit []*AuditLog
@@ -369,7 +369,7 @@ func (c *Client) post(ctx context.Context, sigKey *did.PrivKey, didstr string, o
 }
 
 func (c *Client) CreateDID(ctx context.Context, sigKey *did.PrivKey, recovery string, handle string, service string) (string, error) {
-	ctx, span := otel.Tracer("gosky").Start(ctx, "plcCreate")
+	ctx, span := otel.Tracer("plc-client").Start(ctx, "plcCreateDID")
 	defer span.End()
 
 	op := &Create{
@@ -382,8 +382,8 @@ func (c *Client) CreateDID(ctx context.Context, sigKey *did.PrivKey, recovery st
 	return c.post(ctx, sigKey, "", op)
 }
 
-func (c *Client) UpdateATProtoKey(ctx context.Context, sigKey *did.PrivKey, didstr string, atProtoKey string) error {
-	ctx, span := otel.Tracer("gosky").Start(ctx, "plcUpdateSigningKey")
+func (c *Client) UpdateSigningKey(ctx context.Context, sigKey *did.PrivKey, didstr string, atProtoKey string) error {
+	ctx, span := otel.Tracer("plc-client").Start(ctx, "plcUpdateSigningKey")
 	defer span.End()
 
 	last, err := c.GetLastOperation(ctx, didstr)
@@ -404,7 +404,7 @@ func (c *Client) UpdateATProtoKey(ctx context.Context, sigKey *did.PrivKey, dids
 }
 
 func (c *Client) UpdateHandle(ctx context.Context, sigKey *did.PrivKey, didstr string, handle string) error {
-	ctx, span := otel.Tracer("gosky").Start(ctx, "plcHandle")
+	ctx, span := otel.Tracer("plc-client").Start(ctx, "plcUpdateHandle")
 	defer span.End()
 
 	last, err := c.GetLastOperation(ctx, didstr)
@@ -437,7 +437,7 @@ func (c *Client) UpdateHandle(ctx context.Context, sigKey *did.PrivKey, didstr s
 }
 
 func (c *Client) UpdatePDS(ctx context.Context, sigKey *did.PrivKey, didstr string, pds string) error {
-	ctx, span := otel.Tracer("gosky").Start(ctx, "plcUpdatePDS")
+	ctx, span := otel.Tracer("plc-client").Start(ctx, "plcUpdatePDS")
 	defer span.End()
 
 	last, err := c.GetLastOperation(ctx, didstr)
@@ -460,8 +460,8 @@ func (c *Client) UpdatePDS(ctx context.Context, sigKey *did.PrivKey, didstr stri
 	return err
 }
 
-func (c *Client) UpdateRotationKeys(ctx context.Context, sigKey *did.PrivKey, didstr string, rotationKeys []string) error {
-	ctx, span := otel.Tracer("gosky").Start(ctx, "plcUpdateRotationKeys")
+func (c *Client) UpdateRecoveryKeys(ctx context.Context, sigKey *did.PrivKey, didstr string, rotationKeys []string) error {
+	ctx, span := otel.Tracer("plc-client").Start(ctx, "plcUpdateRecoveryKeys")
 	defer span.End()
 
 	last, err := c.GetLastOperation(ctx, didstr)
@@ -482,7 +482,7 @@ func (c *Client) UpdateRotationKeys(ctx context.Context, sigKey *did.PrivKey, di
 }
 
 func (c *Client) Tombstone(ctx context.Context, sigKey *did.PrivKey, didstr string) error {
-	ctx, span := otel.Tracer("gosky").Start(ctx, "plcSetTombstone")
+	ctx, span := otel.Tracer("plc-client").Start(ctx, "plcTombstone")
 	defer span.End()
 
 	last, err := c.GetLastOperation(ctx, didstr)
