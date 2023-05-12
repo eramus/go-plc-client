@@ -48,7 +48,7 @@ type Operations []Operation
 
 type Operation interface {
 	GetType() string
-	GetRecoveryKeys() []string
+	GetRotationKeys() []string
 	GetAlsoKnownAs() []string
 	GetServices() map[string]*Service
 	GetVerificationMethods() map[string]string
@@ -69,7 +69,7 @@ func (c *Create) GetType() string {
 	return create
 }
 
-func (c *Create) GetRecoveryKeys() []string {
+func (c *Create) GetRotationKeys() []string {
 	return []string{
 		c.RecoveryKey,
 		c.SigningKey,
@@ -116,7 +116,7 @@ func (o *Update) GetType() string {
 	return update
 }
 
-func (o *Update) GetRecoveryKeys() []string {
+func (o *Update) GetRotationKeys() []string {
 	return o.RotationKeys
 }
 
@@ -146,7 +146,7 @@ func (t *Tombstone) GetType() string {
 	return tombstone
 }
 
-func (t *Tombstone) GetRecoveryKeys() []string {
+func (t *Tombstone) GetRotationKeys() []string {
 	return nil
 }
 
@@ -460,8 +460,8 @@ func (c *Client) UpdatePDS(ctx context.Context, signer *did.PrivKey, didstr, pds
 	return err
 }
 
-func (c *Client) UpdateRecoveryKeys(ctx context.Context, signer *did.PrivKey, didstr string, recoveryKeys []string) error {
-	ctx, span := otel.Tracer("plc-client").Start(ctx, "plcUpdateRecoveryKeys")
+func (c *Client) UpdateRotationKeys(ctx context.Context, signer *did.PrivKey, didstr string, rotationKeys []string) error {
+	ctx, span := otel.Tracer("plc-client").Start(ctx, "plcUpdateRotationKeys")
 	defer span.End()
 
 	last, err := c.GetLastOperation(ctx, didstr)
@@ -472,7 +472,7 @@ func (c *Client) UpdateRecoveryKeys(ctx context.Context, signer *did.PrivKey, di
 	}
 
 	next, err := getNextUpdate(last, func(op *Update) {
-		op.RotationKeys = recoveryKeys
+		op.RotationKeys = rotationKeys
 	})
 	if err != nil {
 		return err

@@ -105,7 +105,7 @@ func getNextUpdate(op Operation, next func(*Update)) (*Update, error) {
 		Type: update,
 		Prev: &prev,
 
-		RotationKeys:        op.GetRecoveryKeys(),
+		RotationKeys:        op.GetRotationKeys(),
 		VerificationMethods: op.GetVerificationMethods(),
 		AlsoKnownAs:         op.GetAlsoKnownAs(),
 		Services:            op.GetServices(),
