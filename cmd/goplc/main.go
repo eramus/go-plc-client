@@ -28,7 +28,7 @@ func run(args []string) {
 		&cli.StringFlag{
 			Name:    "plc-host",
 			Usage:   "method, hostname, and port of PDS instance",
-			Value:   "http://localhost:2582",
+			Value:   "https://plc.directory",
 			EnvVars: []string{"PLC_HOST"},
 		},
 	}

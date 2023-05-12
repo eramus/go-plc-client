@@ -1,6 +1,6 @@
 # Go PLC Client
 
-This is a WIP. Use at your own risk. Currently, this has been used against a local version of the PLC server, but it has not been tested against https://plc.directory/
+A client for working with a DID:Placeholder server. This is likely to change as the intent and specification for DID discovery changes.
 
 # TODO
 
