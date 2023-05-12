@@ -13,7 +13,7 @@ import (
 	cbor "github.com/whyrusleeping/cbor-gen"
 )
 
-var ErrNotCBORCompatible = fmt.Errorf("not cbor compatible")
+var ErrNotCBORCompatible = fmt.Errorf("plc client: not cbor compatible")
 var ErrUnknownOperationType = fmt.Errorf("plc client: unknown operation type")
 
 func formatHandle(handle string) string {
