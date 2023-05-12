@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	cbor "github.com/whyrusleeping/cbor-gen"
 	did "github.com/whyrusleeping/go-did"
@@ -172,11 +173,11 @@ type Service struct {
 }
 
 type AuditLog struct {
-	Did       string        `json:"did"`
-	Cid       string        `json:"cid""`
-	Operation Operation     `json:"-"`
-	Nullified bool          `json:"nullified"`
-	CreatedAt cbor.CborTime `json:"createdAt"`
+	Did       string      `json:"did"`
+	Cid       string      `json:"cid""`
+	Operation interface{} `json:"operation"`
+	Nullified bool        `json:"nullified"`
+	CreatedAt time.Time   `json:"createdAt"`
 }
 
 type DocumentData struct {
