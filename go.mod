@@ -6,7 +6,7 @@ require (
 	github.com/bluesky-social/indigo v0.0.0-20230510211720-da6d879e182c
 	github.com/ipfs/go-cid v0.4.1
 	github.com/multiformats/go-multihash v0.2.1
-	github.com/whyrusleeping/cbor-gen v0.0.0-20230418232409-daab9ece03a0
+	github.com/whyrusleeping/cbor-gen v0.0.0-20230419193453-a4e5b3eefd74
 	github.com/whyrusleeping/go-did v0.0.0-20230301193428-2146016fc220
 	go.opentelemetry.io/otel v1.15.1
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2

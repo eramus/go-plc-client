@@ -5,8 +5,6 @@ This is a WIP. Use at your own risk. Currently, this has been used against a loc
 # TODO
 
 * add tests
-* add example usage
-* add cbor gen
 * add docs
 * add method for '/_health'
 * add method for '/export'

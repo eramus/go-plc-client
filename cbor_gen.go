@@ -113,7 +113,7 @@ func (t *Update) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	// t.Services (map[string]*api.Service) (map)
+	// t.Services (map[string]*plc.Service) (map)
 	if len("services") > cbg.MaxLength {
 		return xerrors.Errorf("Value in field \"services\" was too long")
 	}
@@ -361,7 +361,7 @@ func (t *Update) UnmarshalCBOR(r io.Reader) (err error) {
 
 				t.Type = string(sval)
 			}
-			// t.Services (map[string]*api.Service) (map)
+			// t.Services (map[string]*plc.Service) (map)
 		case "services":
 
 			maj, extra, err = cr.ReadHeader()
