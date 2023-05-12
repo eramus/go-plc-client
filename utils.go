@@ -13,6 +13,9 @@ import (
 	cbor "github.com/whyrusleeping/cbor-gen"
 )
 
+var ErrNotCBORCompatible = fmt.Errorf("not cbor compatible")
+var ErrUnknownOperationType = fmt.Errorf("plc client: unknown operation type")
+
 func formatHandle(handle string) string {
 	if !strings.HasPrefix(handle, "at://") {
 		handle = strings.TrimPrefix(strings.TrimPrefix(handle, "https://"), "http://")
@@ -60,6 +63,8 @@ func getOperation(data json.RawMessage) (Operation, error) {
 		if err != nil {
 			return nil, err
 		}
+	default:
+		return nil, ErrUnknownOperationType
 	}
 	return o, nil
 }
@@ -67,7 +72,7 @@ func getOperation(data json.RawMessage) (Operation, error) {
 func getCID(op Operation) (string, error) {
 	c, ok := op.(cbor.CBORMarshaler)
 	if !ok {
-		return "", fmt.Errorf("not cbor compatible")
+		return "", ErrNotCBORCompatible
 	}
 
 	buf := new(bytes.Buffer)
