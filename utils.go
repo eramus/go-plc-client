@@ -41,7 +41,7 @@ func getOperation(data json.RawMessage) (Operation, error) {
 	}
 
 	var o Operation
-	switch dc.getType() {
+	switch dc.GetType() {
 	case string(create):
 		o = &Create{}
 		err := json.Unmarshal(data, o)
@@ -100,10 +100,10 @@ func getNextUpdate(op Operation, next func(*Update)) (*Update, error) {
 		Type: update,
 		Prev: &prev,
 
-		RotationKeys:        op.getRecoveryKeys(),
-		VerificationMethods: op.getVerificationMethods(),
-		AlsoKnownAs:         op.getAlsoKnownAs(),
-		Services:            op.getServices(),
+		RotationKeys:        op.GetRecoveryKeys(),
+		VerificationMethods: op.GetVerificationMethods(),
+		AlsoKnownAs:         op.GetAlsoKnownAs(),
+		Services:            op.GetServices(),
 	}
 
 	next(nop)

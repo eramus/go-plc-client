@@ -40,18 +40,18 @@ type operationChecker struct {
 	Type string `json:"type"`
 }
 
-func (oc operationChecker) getType() string {
+func (oc operationChecker) GetType() string {
 	return oc.Type
 }
 
 type Operations []Operation
 
 type Operation interface {
-	getType() string
-	getRecoveryKeys() []string
-	getAlsoKnownAs() []string
-	getServices() map[string]*Service
-	getVerificationMethods() map[string]string
+	GetType() string
+	GetRecoveryKeys() []string
+	GetAlsoKnownAs() []string
+	GetServices() map[string]*Service
+	GetVerificationMethods() map[string]string
 }
 
 type Create struct {
@@ -65,23 +65,24 @@ type Create struct {
 	Sig  string  `json:"sig" cborgen:"sig,omitempty"`
 }
 
-func (c *Create) getType() string {
+func (c *Create) GetType() string {
 	return create
 }
 
-func (c *Create) getRecoveryKeys() []string {
+func (c *Create) GetRecoveryKeys() []string {
 	return []string{
 		c.RecoveryKey,
+		c.SigningKey,
 	}
 }
 
-func (c *Create) getAlsoKnownAs() []string {
+func (c *Create) GetAlsoKnownAs() []string {
 	return []string{
 		c.Handle,
 	}
 }
 
-func (c *Create) getServices() map[string]*Service {
+func (c *Create) GetServices() map[string]*Service {
 	return map[string]*Service{
 		"atproto_pds": &Service{
 			Type:     "AtprotoPersonalDataServer",
@@ -90,7 +91,7 @@ func (c *Create) getServices() map[string]*Service {
 	}
 }
 
-func (c *Create) getVerificationMethods() map[string]string {
+func (c *Create) GetVerificationMethods() map[string]string {
 	return map[string]string{
 		"atproto": c.SigningKey,
 	}
@@ -111,23 +112,23 @@ type Update struct {
 	Sig  string  `json:"sig" cborgen:"sig,omitempty"`
 }
 
-func (o *Update) getType() string {
+func (o *Update) GetType() string {
 	return update
 }
 
-func (o *Update) getRecoveryKeys() []string {
+func (o *Update) GetRecoveryKeys() []string {
 	return o.RotationKeys
 }
 
-func (o *Update) getAlsoKnownAs() []string {
+func (o *Update) GetAlsoKnownAs() []string {
 	return o.AlsoKnownAs
 }
 
-func (o *Update) getServices() map[string]*Service {
+func (o *Update) GetServices() map[string]*Service {
 	return o.Services
 }
 
-func (o *Update) getVerificationMethods() map[string]string {
+func (o *Update) GetVerificationMethods() map[string]string {
 	return o.VerificationMethods
 }
 
@@ -141,23 +142,23 @@ type Tombstone struct {
 	Sig  string  `json:"sig" cborgen:"sig,omitempty"`
 }
 
-func (t *Tombstone) getType() string {
+func (t *Tombstone) GetType() string {
 	return tombstone
 }
 
-func (t *Tombstone) getRecoveryKeys() []string {
+func (t *Tombstone) GetRecoveryKeys() []string {
 	return nil
 }
 
-func (t *Tombstone) getAlsoKnownAs() []string {
+func (t *Tombstone) GetAlsoKnownAs() []string {
 	return nil
 }
 
-func (t *Tombstone) getServices() map[string]*Service {
+func (t *Tombstone) GetServices() map[string]*Service {
 	return nil
 }
 
-func (t *Tombstone) getVerificationMethods() map[string]string {
+func (t *Tombstone) GetVerificationMethods() map[string]string {
 	return nil
 }
 
@@ -319,7 +320,7 @@ func (c *Client) GetAuditLog(ctx context.Context, didstr string) ([]*AuditLog, e
 	return audit, c.get(ctx, didstr+"/log/audit", audit, parseFn)
 }
 
-func (c *Client) post(ctx context.Context, sigKey *did.PrivKey, didstr string, op Signable) (string, error) {
+func (c *Client) post(ctx context.Context, signer *did.PrivKey, didstr string, op Signable) (string, error) {
 	if c.C == nil {
 		c.C = http.DefaultClient
 	}
@@ -329,7 +330,7 @@ func (c *Client) post(ctx context.Context, sigKey *did.PrivKey, didstr string, o
 		return "", err
 	}
 
-	sig, err := sigKey.Sign(buf.Bytes())
+	sig, err := signer.Sign(buf.Bytes())
 	if err != nil {
 		return "", err
 	}
@@ -367,49 +368,49 @@ func (c *Client) post(ctx context.Context, sigKey *did.PrivKey, didstr string, o
 	return didstr, nil
 }
 
-func (c *Client) CreateDID(ctx context.Context, sigKey *did.PrivKey, recovery string, handle string, service string) (string, error) {
+func (c *Client) CreateDID(ctx context.Context, signer *did.PrivKey, recoveryDID, handle, pdsEndpoint string) (string, error) {
 	ctx, span := otel.Tracer("plc-client").Start(ctx, "plcCreateDID")
 	defer span.End()
 
 	op := &Create{
 		Type:        create,
-		SigningKey:  sigKey.Public().DID(),
-		RecoveryKey: recovery,
+		SigningKey:  signer.Public().DID(),
+		RecoveryKey: recoveryDID,
 		Handle:      formatHandle(handle),
-		Service:     service,
+		Service:     pdsEndpoint,
 	}
-	return c.post(ctx, sigKey, "", op)
+	return c.post(ctx, signer, "", op)
 }
 
-func (c *Client) UpdateSigningKey(ctx context.Context, sigKey *did.PrivKey, didstr string, atProtoKey string) error {
-	ctx, span := otel.Tracer("plc-client").Start(ctx, "plcUpdateSigningKey")
+func (c *Client) UpdateVerificationMethod(ctx context.Context, signer *did.PrivKey, didstr, keyID, keyDID string) error {
+	ctx, span := otel.Tracer("plc-client").Start(ctx, "plcUpdateVerificationMethod")
 	defer span.End()
 
 	last, err := c.GetLastOperation(ctx, didstr)
 	if err != nil {
 		return err
-	} else if last.getType() == tombstone {
+	} else if last.GetType() == tombstone {
 		return ErrIsTombstone
 	}
 
 	next, err := getNextUpdate(last, func(op *Update) {
-		op.VerificationMethods["atproto"] = atProtoKey
+		op.VerificationMethods[keyID] = keyDID
 	})
 	if err != nil {
 		return err
 	}
-	_, err = c.post(ctx, sigKey, didstr, next)
+	_, err = c.post(ctx, signer, didstr, next)
 	return err
 }
 
-func (c *Client) UpdateHandle(ctx context.Context, sigKey *did.PrivKey, didstr string, handle string) error {
+func (c *Client) UpdateHandle(ctx context.Context, signer *did.PrivKey, didstr, handle string) error {
 	ctx, span := otel.Tracer("plc-client").Start(ctx, "plcUpdateHandle")
 	defer span.End()
 
 	last, err := c.GetLastOperation(ctx, didstr)
 	if err != nil {
 		return err
-	} else if last.getType() == tombstone {
+	} else if last.GetType() == tombstone {
 		return ErrIsTombstone
 	}
 
@@ -431,63 +432,63 @@ func (c *Client) UpdateHandle(ctx context.Context, sigKey *did.PrivKey, didstr s
 	if err != nil {
 		return err
 	}
-	_, err = c.post(ctx, sigKey, didstr, next)
+	_, err = c.post(ctx, signer, didstr, next)
 	return err
 }
 
-func (c *Client) UpdatePDS(ctx context.Context, sigKey *did.PrivKey, didstr string, pds string) error {
+func (c *Client) UpdatePDS(ctx context.Context, signer *did.PrivKey, didstr, pdsEndpoint string) error {
 	ctx, span := otel.Tracer("plc-client").Start(ctx, "plcUpdatePDS")
 	defer span.End()
 
 	last, err := c.GetLastOperation(ctx, didstr)
 	if err != nil {
 		return err
-	} else if last.getType() == tombstone {
+	} else if last.GetType() == tombstone {
 		return ErrIsTombstone
 	}
 
 	next, err := getNextUpdate(last, func(op *Update) {
 		op.Services["atproto_pds"] = &Service{
 			Type:     "AtprotoPersonalDataServer",
-			Endpoint: pds,
+			Endpoint: pdsEndpoint,
 		}
 	})
 	if err != nil {
 		return err
 	}
-	_, err = c.post(ctx, sigKey, didstr, next)
+	_, err = c.post(ctx, signer, didstr, next)
 	return err
 }
 
-func (c *Client) UpdateRecoveryKeys(ctx context.Context, sigKey *did.PrivKey, didstr string, rotationKeys []string) error {
+func (c *Client) UpdateRecoveryKeys(ctx context.Context, signer *did.PrivKey, didstr string, recoveryKeys []string) error {
 	ctx, span := otel.Tracer("plc-client").Start(ctx, "plcUpdateRecoveryKeys")
 	defer span.End()
 
 	last, err := c.GetLastOperation(ctx, didstr)
 	if err != nil {
 		return err
-	} else if last.getType() == tombstone {
+	} else if last.GetType() == tombstone {
 		return ErrIsTombstone
 	}
 
 	next, err := getNextUpdate(last, func(op *Update) {
-		op.RotationKeys = rotationKeys
+		op.RotationKeys = recoveryKeys
 	})
 	if err != nil {
 		return err
 	}
-	_, err = c.post(ctx, sigKey, didstr, next)
+	_, err = c.post(ctx, signer, didstr, next)
 	return err
 }
 
-func (c *Client) Tombstone(ctx context.Context, sigKey *did.PrivKey, didstr string) error {
-	ctx, span := otel.Tracer("plc-client").Start(ctx, "plcTombstone")
+func (c *Client) SetTombstone(ctx context.Context, signer *did.PrivKey, didstr string) error {
+	ctx, span := otel.Tracer("plc-client").Start(ctx, "plcSetTombstone")
 	defer span.End()
 
 	last, err := c.GetLastOperation(ctx, didstr)
 	if err != nil {
 		return err
-	} else if last.getType() == tombstone {
+	} else if last.GetType() == tombstone {
 		return ErrIsTombstone
 	}
 
@@ -500,6 +501,6 @@ func (c *Client) Tombstone(ctx context.Context, sigKey *did.PrivKey, didstr stri
 		Type: tombstone,
 		Prev: &prev,
 	}
-	_, err = c.post(ctx, sigKey, didstr, next)
+	_, err = c.post(ctx, signer, didstr, next)
 	return err
 }
