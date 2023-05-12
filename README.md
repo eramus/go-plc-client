@@ -6,5 +6,4 @@ A client for working with a DID:Placeholder server. This is likely to change as 
 
 * add tests
 * add docs
-* add method for '/_health'
 * add method for '/export'

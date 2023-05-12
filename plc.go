@@ -172,6 +172,10 @@ type Service struct {
 	Endpoint string `json:"endpoint" cborgen:"endpoint"`
 }
 
+type Health struct {
+	Version string `json:"version"`
+}
+
 type AuditLog struct {
 	Did       string      `json:"did"`
 	Cid       string      `json:"cid""`
@@ -227,6 +231,14 @@ func (c *Client) get(ctx context.Context, url string, body any, parseFn func([]b
 		return err
 	}
 	return nil
+}
+
+func (c *Client) GetHealth(ctx context.Context) (*Health, error) {
+	ctx, span := otel.Tracer("plc-client").Start(ctx, "plcGetDocument")
+	defer span.End()
+
+	var health = Health{}
+	return &health, c.get(ctx, "_health", &health, nil)
 }
 
 func (c *Client) GetDocument(ctx context.Context, didstr string) (*did.Document, error) {

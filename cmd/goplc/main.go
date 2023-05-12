@@ -33,6 +33,7 @@ func run(args []string) {
 		},
 	}
 	app.Commands = []*cli.Command{
+		getHealthCmd,
 		getDocumentCmd,
 		getDocumentDataCmd,
 		getOperationLogCmd,
@@ -47,6 +48,29 @@ func run(args []string) {
 	}
 
 	app.RunAndExitOnError()
+}
+
+var getHealthCmd = &cli.Command{
+	Name:      "getHealth",
+	Usage:     "get PLC server health",
+	Action: func(cctx *cli.Context) error {
+		ctx := context.Background()
+		host := cctx.String("plc-host")
+
+		cli := plc.New(host)
+		health, err := cli.GetHealth(ctx)
+		if err != nil {
+			return err
+		}
+
+		h, err := json.MarshalIndent(health, "", "\t")
+		if err != nil {
+			return err
+		}
+
+		log.Println(string(h))
+		return nil
+	},
 }
 
 var getDocumentCmd = &cli.Command{
