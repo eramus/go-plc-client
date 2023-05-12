@@ -406,12 +406,12 @@ func (c *Client) UpdateVerificationMethod(ctx context.Context, signer *did.PrivK
 		return ErrIsTombstone
 	}
 
-	next, err := getNextUpdate(last, func(op *Update) {
-		op.VerificationMethods[keyID] = keyDID
-	})
+	next, err := getNextUpdate(last)
 	if err != nil {
 		return err
 	}
+	next.VerificationMethods[keyID] = keyDID
+
 	_, err = c.post(ctx, signer, didstr, next)
 	return err
 }
@@ -428,23 +428,23 @@ func (c *Client) UpdateHandle(ctx context.Context, signer *did.PrivKey, didstr, 
 	}
 
 	handle = formatHandle(handle)
-	next, err := getNextUpdate(last, func(op *Update) {
-		pos := -1
-		for i := 0; i < len(op.AlsoKnownAs); i++ {
-			if strings.HasPrefix(op.AlsoKnownAs[i], "at://") {
-				pos = i
-				break
-			}
-		}
-		if pos < 0 {
-			op.AlsoKnownAs = append(op.AlsoKnownAs, handle)
-		} else {
-			op.AlsoKnownAs[pos] = handle
-		}
-	})
+	next, err := getNextUpdate(last)
 	if err != nil {
 		return err
 	}
+	pos := -1
+	for i := 0; i < len(next.AlsoKnownAs); i++ {
+		if strings.HasPrefix(next.AlsoKnownAs[i], "at://") {
+			pos = i
+			break
+		}
+	}
+	if pos < 0 {
+		next.AlsoKnownAs = append(next.AlsoKnownAs, handle)
+	} else {
+		next.AlsoKnownAs[pos] = handle
+	}
+
 	_, err = c.post(ctx, signer, didstr, next)
 	return err
 }
@@ -460,15 +460,15 @@ func (c *Client) UpdatePDS(ctx context.Context, signer *did.PrivKey, didstr, pds
 		return ErrIsTombstone
 	}
 
-	next, err := getNextUpdate(last, func(op *Update) {
-		op.Services["atproto_pds"] = &Service{
-			Type:     "AtprotoPersonalDataServer",
-			Endpoint: pdsEndpoint,
-		}
-	})
+	next, err := getNextUpdate(last)
 	if err != nil {
 		return err
 	}
+	next.Services["atproto_pds"] = &Service{
+		Type:     "AtprotoPersonalDataServer",
+		Endpoint: pdsEndpoint,
+	}
+
 	_, err = c.post(ctx, signer, didstr, next)
 	return err
 }
@@ -484,12 +484,12 @@ func (c *Client) UpdateRotationKeys(ctx context.Context, signer *did.PrivKey, di
 		return ErrIsTombstone
 	}
 
-	next, err := getNextUpdate(last, func(op *Update) {
-		op.RotationKeys = rotationKeys
-	})
+	next, err := getNextUpdate(last)
 	if err != nil {
 		return err
 	}
+	next.RotationKeys = rotationKeys
+
 	_, err = c.post(ctx, signer, didstr, next)
 	return err
 }

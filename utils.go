@@ -95,7 +95,7 @@ func getCID(op Operation) (string, error) {
 	return prev.String(), nil
 }
 
-func getNextUpdate(op Operation, next func(*Update)) (*Update, error) {
+func getNextUpdate(op Operation) (*Update, error) {
 	prev, err := getCID(op)
 	if err != nil {
 		return nil, err
@@ -111,6 +111,5 @@ func getNextUpdate(op Operation, next func(*Update)) (*Update, error) {
 		Services:            op.GetServices(),
 	}
 
-	next(nop)
 	return nop, nil
 }
